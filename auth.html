@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<base href="./">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Вход — Цифровой навигатор педагога</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1976d2">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #090f1a;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── фон с анимацией ── */
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 20% 50%, rgba(25,118,210,0.15) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 20%, rgba(124,58,237,0.12) 0%, transparent 50%),
+                  radial-gradient(ellipse at 60% 80%, rgba(5,150,105,0.08) 0%, transparent 50%),
+                  #090f1a;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      animation: float 8s ease-in-out infinite;
+      opacity: 0.5;
+    }
+    .orb1 { width:400px; height:400px; background:#1976d2; top:-100px; left:-100px; animation-delay:0s; }
+    .orb2 { width:300px; height:300px; background:#7c3aed; bottom:-80px; right:-80px; animation-delay:-3s; }
+    .orb3 { width:200px; height:200px; background:#059669; bottom:30%; left:30%; animation-delay:-5s; }
+
+    @keyframes float {
+      0%,100% { transform: translate(0,0) scale(1); }
+      33%      { transform: translate(20px,-20px) scale(1.05); }
+      66%      { transform: translate(-15px,15px) scale(0.95); }
+    }
+
+    /* ── карточка ── */
+    .card {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 420px;
+      margin: 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      padding: 40px 36px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(30px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── логотип ── */
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 0 20px rgba(25,118,210,0.6));
+    }
+    .logo-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .logo-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 3px;
+    }
+
+    /* ── табы ── */
+    .tabs {
+      display: flex;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 28px;
+      gap: 4px;
+    }
+    .tab {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      background: none;
+      border-radius: 9px;
+      color: rgba(255,255,255,0.4);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .tab.active {
+      background: #1976d2;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(25,118,210,0.4);
+    }
+
+    /* ── поля ── */
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 7px;
+    }
+    .field input {
+      width: 100%;
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .field input::placeholder { color: rgba(255,255,255,0.2); }
+    .field input:focus {
+      border-color: #1976d2;
+      background: rgba(25,118,210,0.08);
+      box-shadow: 0 0 0 3px rgba(25,118,210,0.15);
+    }
+    .field input.error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+
+    /* ── кнопка ── */
+    .btn-main {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #1976d2, #1565c0);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+      margin-top: 6px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(25,118,210,0.35);
+    }
+    .btn-main:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(25,118,210,0.5); }
+    .btn-main:active { transform: translateY(0); }
+    .btn-main:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* ── спиннер ── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .btn-main.loading .spinner { display: block; }
+    .btn-main.loading .btn-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── сообщение об ошибке ── */
+    .msg {
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 14px;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    .msg.error   { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.3);  color: #fca5a5; }
+    .msg.success { background: rgba(34,197,94,0.12);  border: 1px solid rgba(34,197,94,0.3);  color: #86efac; }
+    .msg.info    { background: rgba(25,118,210,0.12); border: 1px solid rgba(25,118,210,0.3); color: #93c5fd; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── экран успеха ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 20px 0;
+      animation: slideUp 0.4s ease;
+    }
+    .success-screen.show { display: block; }
+    .success-icon {
+      font-size: 60px;
+      display: block;
+      margin-bottom: 16px;
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn { from { transform:scale(0); } to { transform:scale(1); } }
+    .success-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .success-sub   { font-size: 14px; color: rgba(255,255,255,0.5); }
+
+    /* ── прогресс бар ── */
+    .progress-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1976d2, #22c55e);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 2s linear;
+    }
+
+    /* ── подсказка пароля ── */
+    .pwd-strength {
+      display: flex; gap: 4px; margin-top: 6px;
+    }
+    .pwd-bar {
+      flex: 1; height: 3px; border-radius: 2px;
+      background: rgba(255,255,255,0.08);
+      transition: background 0.3s;
+    }
+    .pwd-bar.weak   { background: #ef4444; }
+    .pwd-bar.medium { background: #f59e0b; }
+    .pwd-bar.strong { background: #22c55e; }
+
+    /* ── eye toggle ── */
+    .input-wrap { position: relative; }
+    .input-wrap input { padding-right: 44px; }
+    .eye-btn {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.3); font-size: 18px;
+      transition: color 0.2s; padding: 4px;
+    }
+    .eye-btn:hover { color: rgba(255,255,255,0.7); }
+
+    /* ── PIN ── */
+    .pin-dot {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      transition: all 0.15s;
+    }
+    .pin-dot.filled {
+      background: #1976d2;
+      border-color: #1976d2;
+      box-shadow: 0 0 12px rgba(25,118,210,0.6);
+    }
+    .pin-dot.error {
+      background: #ef4444;
+      border-color: #ef4444;
+      animation: shake 0.3s ease;
+    }
+    .pin-btn {
+      padding: 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .pin-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.05); }
+    .pin-btn:active { transform: scale(0.95); }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-6px); }
+      75%      { transform: translateX(6px); }
+    }
+
+    /* ── footer ── */
+    .card-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.2);
+    }
+  </style>
+
+<style id="theme-vars">
+[data-theme="light"]{
+  --bg:#f0f4f8 !important;--bg2:#e4eaf2 !important;--bg3:#dae2ed !important;
+  --card:#ffffff !important;--border:rgba(0,0,0,0.09) !important;
+  --text:#1a2234 !important;--text2:#4a5f82 !important;--text3:#8a9ab8 !important;
+}
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<div class="card">
+  <!-- Логотип -->
+  <div class="logo">
+    <span class="logo-icon">🎓</span>
+    <div class="logo-title">Цифровой навигатор</div>
+    <div class="logo-sub">г. Петропавловск · СКО</div>
+  </div>
+
+
+  <!-- PIN экран (только для админа) -->
+  <div id="pin-screen" style="display:none">
+    <div class="logo" style="margin-bottom:24px">
+      <span class="logo-icon">🛡️</span>
+      <div class="logo-title">Подтверждение входа</div>
+      <div class="logo-sub">Введите PIN-код администратора</div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:24px">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn" onclick="pinClear()" style="font-size:13px;color:rgba(255,255,255,0.4)">Очистить</button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn" onclick="pinBack()" style="font-size:20px">⌫</button>
+    </div>
+    <div class="msg" id="msg-pin" style="margin-top:16px;text-align:center"></div>
+  </div>
+
+  <!-- Экран смены пароля -->
+  <div id="change-pwd-screen" style="display:none">
+    <div class="logo" style="margin-bottom:20px">
+      <span class="logo-icon">🔐</span>
+      <div class="logo-title">Смените пароль</div>
+      <div class="logo-sub">Это временный пароль — создайте свой</div>
+    </div>
+    <div class="field">
+      <label>Новый пароль</label>
+      <div class="input-wrap">
+        <input type="password" id="cp-pwd" placeholder="Минимум 6 символов"
+          autocomplete="new-password" oninput="checkPwd(this.value)">
+        <button class="eye-btn" onclick="toggleEye('cp-pwd',this)" tabindex="-1">👁</button>
+      </div>
+      <div class="pwd-strength">
+        <div class="pwd-bar" id="pb1"></div>
+        <div class="pwd-bar" id="pb2"></div>
+        <div class="pwd-bar" id="pb3"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Повторите новый пароль</label>
+      <div class="input-wrap">
+        <input type="password" id="cp-pwd2" placeholder="Повторите пароль" autocomplete="new-password">
+        <button class="eye-btn" onclick="toggleEye('cp-pwd2',this)" tabindex="-1">👁</button>
+      </div>
+    </div>
+    <button class="btn-main" id="btn-cp" onclick="doChangePwd()">
+      <span class="btn-text">Сохранить и войти →</span>
+      <div class="spinner"></div>
+    </button>
+    <div class="msg" id="msg-cp"></div>
+  </div>
+
+  <!-- Экран успеха -->
+  <div class="success-screen" id="success-screen">
+    <span class="success-icon" id="s-icon">✓</span>
+    <div class="success-title" id="s-title">Добро пожаловать!</div>
+    <div class="success-sub" id="s-sub">Переход на портал...</div>
+    <div class="progress-bar"><div class="progress-fill" id="s-progress"></div></div>
+  </div>
+
+  <!-- Экран смены пароля (первый вход) -->
+  <div id="change-pwd-screen" style="display:none">
+    <div class="logo" style="margin-bottom:20px">
+      <span class="logo-icon">🔐</span>
+      <div class="logo-title">Смените пароль</div>
+      <div class="logo-sub">Это ваш первый вход — придумайте свой пароль</div>
+    </div>
+    <div class="field">
+      <label>Новый пароль</label>
+      <div class="input-wrap">
+        <input type="password" id="cp-pwd" placeholder="Минимум 6 символов"
+          autocomplete="new-password" oninput="checkPwd(this.value)">
+        <button class="eye-btn" onclick="toggleEye('cp-pwd',this)" tabindex="-1">👁</button>
+      </div>
+      <div class="pwd-strength">
+        <div class="pwd-bar" id="pb1"></div>
+        <div class="pwd-bar" id="pb2"></div>
+        <div class="pwd-bar" id="pb3"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Повторите новый пароль</label>
+      <div class="input-wrap">
+        <input type="password" id="cp-pwd2" placeholder="Повторите пароль" autocomplete="new-password">
+        <button class="eye-btn" onclick="toggleEye('cp-pwd2',this)" tabindex="-1">👁</button>
+      </div>
+    </div>
+    <button class="btn-main" id="btn-cp" onclick="doChangePwd()">
+      <span class="btn-text">Сохранить и войти →</span>
+      <div class="spinner"></div>
+    </button>
+    <div class="msg" id="msg-cp"></div>
+  </div>
+
+  <!-- PIN экран (только для админа) -->
+  <div id="pin-screen" style="display:none">
+    <div class="logo" style="margin-bottom:24px">
+      <span class="logo-icon">🛡️</span>
+      <div class="logo-title">Подтверждение входа</div>
+      <div class="logo-sub">Введите PIN-код администратора</div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:24px">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn" onclick="pinClear()" style="font-size:13px;color:rgba(255,255,255,0.4)">Очистить</button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn" onclick="pinBack()" style="font-size:20px">⌫</button>
+    </div>
+    <div class="msg" id="msg-pin" style="margin-top:16px;text-align:center"></div>
+  </div>
+
+  <!-- Экран смены пароля -->
+  <div id="change-pwd-screen" style="display:none">
+    <div class="logo" style="margin-bottom:20px">
+      <span class="logo-icon">🔐</span>
+      <div class="logo-title">Смена пароля</div>
+      <div class="logo-sub">Это ваш первый вход — придумайте личный пароль</div>
+    </div>
+    <div class="field">
+      <label>Новый пароль</label>
+      <div class="input-wrap">
+        <input type="password" id="cp-pwd" placeholder="Минимум 6 символов"
+          autocomplete="new-password" oninput="checkPwd2(this.value)">
+        <button class="eye-btn" onclick="toggleEye('cp-pwd',this)" tabindex="-1">👁</button>
+      </div>
+      <div class="pwd-strength">
+        <div class="pwd-bar" id="cpb1"></div>
+        <div class="pwd-bar" id="cpb2"></div>
+        <div class="pwd-bar" id="cpb3"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Повторите пароль</label>
+      <div class="input-wrap">
+        <input type="password" id="cp-pwd2" placeholder="Повторите новый пароль" autocomplete="new-password">
+        <button class="eye-btn" onclick="toggleEye('cp-pwd2',this)" tabindex="-1">👁</button>
+      </div>
+    </div>
+    <button class="btn-main" id="btn-cp" onclick="doChangePwd()">
+      <span class="btn-text">Сохранить пароль →</span>
+      <div class="spinner"></div>
+    </button>
+    <div class="msg" id="msg-cp"></div>
+  </div>
+
+  <!-- Форма -->
+  <div id="auth-form">
+    <!-- Табы -->
+    <div class="tabs">
+      <button class="tab active" id="tab-login" onclick="switchTab('login')">Войти</button>
+      <button class="tab" id="tab-reg" onclick="switchTab('reg')">Регистрация</button>
+    </div>
+
+    <!-- ВХОД -->
+    <div id="panel-login">
+      <div class="field">
+        <label>Логин</label>
+        <input type="text" id="l-login" placeholder="Ваш логин" autocomplete="username" autocapitalize="none">
+      </div>
+      <div class="field">
+        <label>Пароль</label>
+        <div class="input-wrap">
+          <input type="password" id="l-pwd" placeholder="Ваш пароль" autocomplete="current-password">
+          <button class="eye-btn" onclick="toggleEye('l-pwd',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn-main" id="btn-login" onclick="doLogin()">
+        <span class="btn-text">Войти в портал →</span>
+        <div class="spinner"></div>
+      </button>
+      <div class="msg" id="msg-login"></div>
+
+    <!-- РЕГИСТРАЦИЯ -->
+    <div id="panel-reg" style="display:none">
+      <div class="field">
+        <label>Имя и фамилия</label>
+        <input type="text" id="r-name" placeholder="Например: Айгуль Сейткали" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Логин</label>
+        <input type="text" id="r-login" placeholder="Только латиница и цифры" autocomplete="username" autocapitalize="none">
+      </div>
+      <div class="field">
+        <label>Пароль</label>
+        <div class="input-wrap">
+          <input type="password" id="r-pwd" placeholder="Минимум 6 символов"
+            autocomplete="new-password" oninput="checkPwd(this.value)">
+          <button class="eye-btn" onclick="toggleEye('r-pwd',this)" tabindex="-1">👁</button>
+        </div>
+        <div class="pwd-strength">
+          <div class="pwd-bar" id="pb1"></div>
+          <div class="pwd-bar" id="pb2"></div>
+          <div class="pwd-bar" id="pb3"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Повторите пароль</label>
+        <div class="input-wrap">
+          <input type="password" id="r-pwd2" placeholder="Повторите пароль" autocomplete="new-password">
+          <button class="eye-btn" onclick="toggleEye('r-pwd2',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
+      <button class="btn-main" id="btn-reg" onclick="doRegister()">
+        <span class="btn-text">Создать аккаунт →</span>
+        <div class="spinner"></div>
+      </button>
+      <div class="msg" id="msg-reg"></div>
+    </div>
+    </div>
+
+    
+  </div>
+
+  <div class="card-footer">Портал педагогов дошкольного образования СКО</div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   КОНФИГ
+══════════════════════════════════════════ */
+const SB_URL  = 'https://ljtogliylpubvkckpwyv.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqdG9nbGl5bHB1YnZrY2twd3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNzEzODQsImV4cCI6MjA4ODc0NzM4NH0.91EQ_EEfi8X09Vm0jmH12_35R6tf0BwtTGoX3K5lgfc';
+const SALT    = 'pedagog_sko_2025_';
+const TG_BOT  = '8222635506:AAGalT-Y-31jQ6VWKZHBcqqmeGc27M_c1Lk';
+const TG_CHAT = '8129422076';
+
+/* ══ SHA-256 ══ */
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ══ Supabase helper ══ */
+async function sb(path, opts = {}) {
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+      headers: {
+        'apikey': SB_ANON,
+        'Authorization': 'Bearer ' + SB_ANON,
+        'Content-Type': 'application/json',
+        'Prefer': opts.method === 'POST' ? 'return=representation' : 'return=minimal',
+        ...(opts.headers || {})
+      },
+      signal: ctrl.signal,
+      ...opts
+    });
+    clearTimeout(tid);
+    if (opts.method === 'DELETE') return true;
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.message || data.error || r.statusText);
+    return data;
+  } catch(e) {
+    clearTimeout(tid);
+    throw e;
+  }
+}
+
+/* ══ Telegram уведомление ══ */
+function tgSend(text) {
+  fetch(`https://api.telegram.org/bot${TG_BOT}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: TG_CHAT, text, parse_mode: 'HTML' })
+  }).catch(() => {});
+}
+
+/* ══ Токен сессии ══ */
+function genToken() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(b => b.toString(16).padStart(2,'0')).join('');
+}
+function saveToken(token) {
+  localStorage.setItem('psess_token', token);
+  sessionStorage.setItem('psess_token', token);
+}
+function saveUser(user) {
+  const str = JSON.stringify(user);
+  localStorage.setItem('psess_user', str);
+  sessionStorage.setItem('psess_user', str);
+}
+
+/* ══ UI helpers ══ */
+function showMsg(id, type, text) {
+  const el = document.getElementById(id);
+  el.className = 'msg ' + type;
+  el.textContent = text;
+  el.style.display = 'block';
+}
+function hideMsg(id) {
+  const el = document.getElementById(id);
+  el.style.display = 'none';
+}
+function setLoading(btnId, on) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = on;
+  btn.classList.toggle('loading', on);
+}
+function toggleEye(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+function checkPwd(val) {
+  const bars = ['pb1','pb2','pb3'];
+  bars.forEach(b => { document.getElementById(b).className = 'pwd-bar'; });
+  if (!val) return;
+  const strong = val.length >= 8 && /[A-Z]/.test(val) && /[0-9]/.test(val);
+  const medium = val.length >= 6;
+  if (strong) {
+    bars.forEach(b => document.getElementById(b).classList.add('strong'));
+  } else if (medium) {
+    document.getElementById('pb1').classList.add('medium');
+    document.getElementById('pb2').classList.add('medium');
+  } else {
+    document.getElementById('pb1').classList.add('weak');
+  }
+}
+
+/* ══ Переключение таба ══ */
+function showSuccess(name, isReg) {
+  document.getElementById('auth-form').style.display = 'none';
+  const ss = document.getElementById('success-screen');
+  ss.classList.add('show');
+  document.getElementById('s-icon').textContent  = isReg ? '🎉' : '✅';
+  document.getElementById('s-title').textContent = (isReg ? 'Добро пожаловать, ' : 'С возвращением, ') + name + '!';
+  document.getElementById('s-sub').textContent   = 'Переход на портал...';
+  // Запускаем прогресс бар
+  setTimeout(() => { document.getElementById('s-progress').style.width = '100%'; }, 50);
+  setTimeout(() => { window.location.replace('index.html'); }, 2200);
+}
+
+/* ══════════════════════════════════════════
+   ВХОД
+══════════════════════════════════════════ */
+async function doLogin() {
+  const login = document.getElementById('l-login').value.trim().toLowerCase();
+  const pwd   = document.getElementById('l-pwd').value;
+
+  if (!login) { showMsg('msg-login','error','Введите логин'); return; }
+  if (!pwd)   { showMsg('msg-login','error','Введите пароль'); return; }
+
+  setLoading('btn-login', true);
+  hideMsg('msg-login');
+
+  try {
+    const pwdHash = await sha256(SALT + pwd);
+
+    // Ищем пользователя
+    const rows = await sb(`pedagog_users?login=eq.${encodeURIComponent(login)}&select=id,login,name,role,password_hash,pin_hash,must_change_password&limit=1`);
+
+    if (!rows || !rows.length) {
+      showMsg('msg-login','error','❌ Пользователь не найден');
+      setLoading('btn-login', false);
+      return;
+    }
+
+    const user = rows[0];
+
+    if (user.password_hash !== pwdHash) {
+      showMsg('msg-login','error','❌ Неверный пароль');
+      setLoading('btn-login', false);
+      return;
+    }
+
+    // Проверяем флаг смены пароля
+    if (user.must_change_password) {
+      setLoading('btn-login', false);
+      showChangePwd(user);
+      return;
+    }
+
+    // Если админ — PIN экран
+    if (user.role === 'admin') {
+      setLoading('btn-login', false);
+      _pendingUser = user;
+      showPinScreen();
+      return;
+    }
+
+    // Создаём сессию
+    const token   = genToken();
+    const expires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+
+    await sb('user_sessions', {
+      method: 'POST',
+      body: JSON.stringify({
+        token,
+        user_id:    user.id,
+        login:      user.login,
+        name:       user.name,
+        role:       user.role || 'teacher',
+        expires_at: expires
+      })
+    });
+
+    saveToken(token);
+    saveUser({  
+      id: user.id, login: user.login, name: user.name, role: user.role || 'teacher'
+     });
+    localStorage.setItem('psess_user', JSON.stringify({
+      id: user.id, login: user.login, name: user.name, role: user.role || 'teacher'
+    }));
+
+    // Если первый вход — смена пароля
+    if (user.must_change_password) {
+      setLoading('btn-login', false);
+      showChangePwd(user);
+      return;
+    }
+    // Если admin — PIN экран
+    if (user.role === 'admin') {
+      setLoading('btn-login', false);
+      showPinScreen(user);
+      return;
+    }
+    tgSend(`🔑 Вход: <b>${user.name}</b> (${user.login})`);
+    showSuccess(user.name, false);
+
+  } catch(e) {
+    showMsg('msg-login','error','⚠️ Ошибка: ' + e.message);
+    setLoading('btn-login', false);
+  }
+}
+
+/* ══════════════════════════════════════════
+   РЕГИСТРАЦИЯ
+══════════════════════════════════════════ */
+
+async function checkPin() {
+  if (!_pendingUser) return;
+  const pinHash = await sha256(SALT + _pinValue);
+  if (pinHash !== _pendingUser.pin_hash) {
+    for (let i = 0; i < 4; i++) {
+      const d = document.getElementById('pd'+i);
+      if (d) d.classList.add('error');
+    }
+    showMsg('msg-pin','error','❌ Неверный PIN-код');
+    setTimeout(() => { _pinValue = ''; updatePinDots(); hideMsg('msg-pin'); }, 1200);
+    return;
+  }
+  // PIN верный — создаём сессию и идём в admin.html
+  try {
+    const token   = genToken();
+    const expires = new Date(Date.now() + 24*3600*1000).toISOString();
+    await sb('user_sessions', {
+      method: 'POST',
+      body: JSON.stringify({
+        token, user_id: _pendingUser.id, login: _pendingUser.login,
+        name: _pendingUser.name, role: 'admin', expires_at: expires
+      })
+    });
+    saveToken(token);
+    saveUser({  
+      id: _pendingUser.id, login: _pendingUser.login,
+      name: _pendingUser.name, role: 'admin'
+     });
+    localStorage.setItem('psess_user', JSON.stringify({
+      id: _pendingUser.id, login: _pendingUser.login,
+      name: _pendingUser.name, role: 'admin'
+    }));
+    tgSend('\u{1F6E1}\uFE0F Вход АДМИНА: <b>' + _pendingUser.name + '</b>');
+    // Показываем success → admin.html
+    document.getElementById('pin-screen').style.display = 'none';
+    const ss = document.getElementById('success-screen');
+    ss.classList.add('show');
+    document.getElementById('s-icon').textContent  = '🛡️';
+    document.getElementById('s-title').textContent = 'Добро пожаловать, Администратор!';
+    document.getElementById('s-sub').textContent   = 'Переход в панель управления...';
+    setTimeout(() => { document.getElementById('s-progress').style.width = '100%'; }, 50);
+    setTimeout(() => { window.location.replace('admin.html'); }, 2000);
+  } catch(e) {
+    showMsg('msg-pin','error','Ошибка: ' + e.message);
+    _pinValue = ''; updatePinDots();
+  }
+}
+
+/* ══ Смена пароля (первый вход) ══ */
+function showChangePwd(user) {
+  _pendingUser = user;
+  document.getElementById('auth-form').style.display         = 'none';
+  document.getElementById('change-pwd-screen').style.display = 'block';
+}
+
+function checkPwd2(val) {
+  const bars = ['cpb1','cpb2','cpb3'];
+  bars.forEach(b => { document.getElementById(b).className = 'pwd-bar'; });
+  if (!val) return;
+  const strong = val.length >= 8 && /[A-Z]/.test(val) && /[0-9]/.test(val);
+  const medium = val.length >= 6;
+  if (strong)       bars.forEach(b => document.getElementById(b).classList.add('strong'));
+  else if (medium) { document.getElementById('cpb1').classList.add('medium'); document.getElementById('cpb2').classList.add('medium'); }
+  else              document.getElementById('cpb1').classList.add('weak');
+}
+
+async function doChangePwd() {
+  const pwd  = document.getElementById('cp-pwd').value;
+  const pwd2 = document.getElementById('cp-pwd2').value;
+  if (pwd.length < 6) { showMsg('msg-cp','error','Минимум 6 символов'); return; }
+  if (pwd !== pwd2)   { showMsg('msg-cp','error','Пароли не совпадают'); return; }
+  if (!_pendingUser)  { showMsg('msg-cp','error','Ошибка — войдите снова'); return; }
+  setLoading('btn-cp', true);
+  try {
+    const h = await sha256(SALT + pwd);
+    await sb(`pedagog_users?id=eq.${_pendingUser.id}`, {
+      method: 'PATCH', body: JSON.stringify({ password_hash: h, must_change_password: false })
+    });
+    const token   = genToken();
+    const expires = new Date(Date.now() + 24*3600*1000).toISOString();
+    await sb('user_sessions', {
+      method: 'POST',
+      body: JSON.stringify({
+        token, user_id: _pendingUser.id, login: _pendingUser.login,
+        name: _pendingUser.name, role: _pendingUser.role || 'teacher', expires_at: expires
+      })
+    });
+    saveToken(token);
+    saveUser({  
+      id: _pendingUser.id, login: _pendingUser.login,
+      name: _pendingUser.name, role: _pendingUser.role || 'teacher'
+     });
+    localStorage.setItem('psess_user', JSON.stringify({
+      id: _pendingUser.id, login: _pendingUser.login,
+      name: _pendingUser.name, role: _pendingUser.role || 'teacher'
+    }));
+    tgSend('\u{1F511} Пароль сменён: <b>' + _pendingUser.name + '</b>');
+    showSuccess(_pendingUser.name, false);
+  } catch(e) {
+    showMsg('msg-cp','error','Ошибка: ' + e.message);
+    setLoading('btn-cp', false);
+  }
+}
+
+/* ══ ПЕРЕКЛЮЧЕНИЕ ТАБОВ ══ */
+function switchTab(tab) {
+  document.getElementById('panel-login').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('panel-reg').style.display   = tab === 'reg'   ? '' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-reg').classList.toggle('active',   tab === 'reg');
+  hideMsg('msg-login');
+  hideMsg('msg-reg');
+}
+
